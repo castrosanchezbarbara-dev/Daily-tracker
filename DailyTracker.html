@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Daily Tracker">
+<title>Daily Tracker</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --rosa: #FFB3D9;
+  --lila: #D4B5FF;
+  --amarillo: #FFFAB3;
+  --rosa-dark: #FF94C2;
+  --lila-dark: #C29EFF;
+  --amarillo-dark: #FFEF80;
+  --text-dark: #2C2C2C;
+  --text-light: #888;
+  --text-muted: #BBB;
+  --border-color: #E8E8E8;
+  --bg-page: #FAFAF8;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --rosa: #FF94C2;
+    --lila: #C29EFF;
+    --amarillo: #FFE680;
+    --rosa-dark: #FF6BA8;
+    --lila-dark: #B383FF;
+    --amarillo-dark: #FFDC4D;
+    --text-dark: #F5F5F5;
+    --text-light: #CCC;
+    --text-muted: #888;
+    --border-color: #404040;
+    --bg-page: #1A1A18;
+  }
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-dark);
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+body { overflow: hidden; display: flex; flex-direction: column; }
+
+.container {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 16px;
+  padding-bottom: 32px;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 24px;
+  padding-top: 8px;
+}
+
+.header h1 {
+  font-size: 28px;
+  color: var(--text-dark);
+  margin-bottom: 4px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.header p {
+  font-size: 13px;
+  color: var(--text-light);
+  text-transform: capitalize;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tab {
+  flex: 1;
+  padding: 12px 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.tab.active {
+  color: var(--text-dark);
+  border-bottom-color: var(--rosa);
+}
+
+.content {
+  display: none;
+  animation: fadeIn 0.2s ease;
+}
+
+.content.active { display: block; }
+
+@keyframes fadeIn { from { opacity: 0.5; } to { opacity: 1; } }
+
+.reminders {
+  background: linear-gradient(135deg, var(--amarillo) 0%, #FFFCC9 100%);
+  border-left: 4px solid var(--amarillo-dark);
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+}
+
+.reminder-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 8px;
+  letter-spacing: 0.3px;
+}
+
+.reminder-item {
+  font-size: 13px;
+  color: var(--text-dark);
+  margin: 4px 0;
+  font-weight: 500;
+}
+
+.add-task {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.add-task input,
+.add-task select {
+  padding: 11px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 14px;
+  background: var(--bg-page);
+  color: var(--text-dark);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.add-task input {
+  flex: 1;
+}
+
+.add-task select {
+  width: 100px;
+  cursor: pointer;
+}
+
+.add-task button {
+  padding: 11px 16px;
+  background: var(--rosa);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  active: scale(0.96);
+}
+
+.add-task button:active { opacity: 0.9; }
+
+.category {
+  margin-bottom: 20px;
+}
+
+.category-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+
+.task-item {
+  background: var(--bg-page);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  transition: all 0.15s ease;
+}
+
+.task-item.done {
+  opacity: 0.55;
+  background: rgba(0,0,0,0.02);
+}
+
+.task-item.done .task-text {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+.task-checkbox {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  border: 2px solid var(--rosa);
+  border-radius: 4px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  transition: all 0.15s ease;
+}
+
+.task-item.done .task-checkbox {
+  background: var(--rosa);
+  border-color: var(--rosa);
+}
+
+.task-checkbox::after {
+  content: "✓";
+  color: white;
+  font-weight: 700;
+  font-size: 12px;
+  display: none;
+}
+
+.task-item.done .task-checkbox::after { display: block; }
+
+.task-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.task-text {
+  font-size: 14px;
+  color: var(--text-dark);
+  margin-bottom: 4px;
+  word-break: break-word;
+}
+
+.task-note {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.task-delete {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 18px;
+  padding: 2px 8px;
+  margin-left: 4px;
+  flex-shrink: 0;
+}
+
+.task-delete:active { opacity: 0.6; }
+
+.habits-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.habit-card {
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  transition: transform 0.15s ease;
+}
+
+.habit-card:active { transform: scale(0.98); }
+
+.habit-card.rosa {
+  background: linear-gradient(135deg, var(--rosa) 0%, #FFC4E3 100%);
+  border: none;
+}
+
+.habit-card.lila {
+  background: linear-gradient(135deg, var(--lila) 0%, #E0C9FF 100%);
+  border: none;
+}
+
+.habit-card.amarillo {
+  background: linear-gradient(135deg, var(--amarillo) 0%, #FFFCC9 100%);
+  border: none;
+}
+
+.habit-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin-bottom: 8px;
+  letter-spacing: 0.3px;
+}
+
+.habit-value {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin-bottom: 4px;
+  letter-spacing: -1px;
+}
+
+.habit-progress {
+  font-size: 12px;
+  color: var(--text-light);
+  margin-bottom: 12px;
+}
+
+.habit-buttons {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+}
+
+.habit-btn {
+  padding: 8px 14px;
+  border: 1.5px solid var(--text-dark);
+  background: transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dark);
+  transition: all 0.15s ease;
+}
+
+.habit-btn:active { opacity: 0.7; transform: scale(0.96); }
+
+.notes-label {
+  font-size: 13px;
+  color: var(--text-light);
+  margin-bottom: 12px;
+  display: block;
+}
+
+.notes-area {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 120px;
+  background: var(--bg-page);
+  color: var(--text-dark);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.save-notes-btn {
+  margin-top: 12px;
+  width: 100%;
+  padding: 12px;
+  background: var(--lila);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.save-notes-btn:active { opacity: 0.9; }
+
+@supports (padding: max(0px)) {
+  .container { padding-bottom: max(32px, env(safe-area-inset-bottom)); }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="header">
+    <h1>Daily Tracker</h1>
+    <p id="today"></p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="tasks">Tareas</button>
+    <button class="tab" data-tab="habits">Hábitos</button>
+    <button class="tab" data-tab="notes">Notas</button>
+  </div>
+
+  <div id="tasks" class="content active">
+    <div id="reminders" class="reminders" style="display: none;">
+      <div class="reminder-title">⚠️ Recordatorios de hoy</div>
+      <div id="reminder-list"></div>
+    </div>
+
+    <div class="add-task">
+      <input type="text" id="taskInput" placeholder="Nueva tarea..." autocomplete="off">
+      <select id="categorySelect">
+        <option value="trabun">Trabün</option>
+        <option value="migratio">Migratio</option>
+        <option value="posdata">Posdata</option>
+        <option value="generales">Generales</option>
+      </select>
+      <button onclick="addTask()" style="padding: 11px 12px; width: 44px;">+</button>
+    </div>
+
+    <div id="tasksList"></div>
+  </div>
+
+  <div id="habits" class="content">
+    <div class="habits-grid" id="habitsGrid"></div>
+  </div>
+
+  <div id="notes" class="content">
+    <label class="notes-label">Observaciones, comentarios, lo que necesites anotar</label>
+    <textarea id="notesArea" class="notes-area" placeholder="Escribe aquí..."></textarea>
+    <button class="save-notes-btn" onclick="saveNotes()">Guardar notas</button>
+  </div>
+</div>
+
+<script>
+const data = {
+  tasks: {
+    trabun: [],
+    migratio: [],
+    posdata: [],
+    generales: []
+  },
+  habits: {
+    agua: { current: 0, target: 1, unit: 'L', color: 'rosa' },
+    pilates: { current: 0, target: 1, unit: 'x/sem', color: 'lila' },
+    trotadora: { current: 0, target: 3, unit: 'x/sem', color: 'amarillo' },
+    medicamentos: { current: 0, target: 1, unit: 'diario', color: 'rosa' }
+  },
+  notes: ''
+};
+
+const today = new Date().toLocaleDateString('es-ES', {
+  weekday: 'long',
+  month: 'long',
+  day: 'numeric'
+});
+document.getElementById('today').textContent = today.charAt(0).toUpperCase() + today.slice(1);
+
+function loadData() {
+  const saved = localStorage.getItem('tracker-data');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      data.tasks = parsed.tasks || data.tasks;
+      data.habits = parsed.habits || data.habits;
+      data.notes = parsed.notes || '';
+    } catch (e) {
+      console.log('Error loading data:', e);
+    }
+  }
+}
+
+function saveData() {
+  try {
+    localStorage.setItem('tracker-data', JSON.stringify(data));
+  } catch (e) {
+    console.log('Error saving data:', e);
+  }
+}
+
+function renderTasks() {
+  const list = document.getElementById('tasksList');
+  list.innerHTML = '';
+
+  const categories = ['trabun', 'migratio', 'posdata', 'generales'];
+  const catNames = {
+    trabun: 'Trabün',
+    migratio: 'Migratio',
+    posdata: 'Posdata',
+    generales: 'Generales'
+  };
+
+  categories.forEach(cat => {
+    if (data.tasks[cat].length > 0) {
+      let html = `<div class="category"><div class="category-title">${catNames[cat]}</div>`;
+
+      data.tasks[cat].forEach((task, i) => {
+        html += `
+          <div class="task-item ${task.done ? 'done' : ''}">
+            <div class="task-checkbox" onclick="toggleTask('${cat}', ${i})"></div>
+            <div class="task-content">
+              <div class="task-text">${escapeHtml(task.text)}</div>
+              ${task.note ? `<div class="task-note">${escapeHtml(task.note)}</div>` : ''}
+            </div>
+            <button class="task-delete" onclick="deleteTask('${cat}', ${i})">✕</button>
+          </div>
+        `;
+      });
+      html += '</div>';
+      list.innerHTML += html;
+    }
+  });
+
+  checkReminders();
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function addTask() {
+  const input = document.getElementById('taskInput');
+  const category = document.getElementById('categorySelect').value;
+  if (input.value.trim()) {
+    data.tasks[category].push({ text: input.value.trim(), done: false, note: '' });
+    input.value = '';
+    input.focus();
+    saveData();
+    renderTasks();
+  }
+}
+
+document.getElementById('taskInput').addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') addTask();
+});
+
+function toggleTask(cat, i) {
+  data.tasks[cat][i].done = !data.tasks[cat][i].done;
+  saveData();
+  renderTasks();
+}
+
+function deleteTask(cat, i) {
+  data.tasks[cat].splice(i, 1);
+  saveData();
+  renderTasks();
+}
+
+function renderHabits() {
+  const grid = document.getElementById('habitsGrid');
+  grid.innerHTML = '';
+
+  const habitNames = {
+    agua: 'Agua',
+    pilates: 'Pilates',
+    trotadora: 'Trotadora',
+    medicamentos: 'Medicamentos'
+  };
+
+  Object.entries(data.habits).forEach(([habit, info]) => {
+    const name = habitNames[habit];
+    const html = `
+      <div class="habit-card ${info.color}">
+        <div class="habit-name">${name}</div>
+        <div class="habit-value">${info.current}/${info.target}</div>
+        <div class="habit-progress">${info.unit}</div>
+        <div class="habit-buttons">
+          <button class="habit-btn" onclick="decreaseHabit('${habit}')">−</button>
+          <button class="habit-btn" onclick="increaseHabit('${habit}')">+</button>
+        </div>
+      </div>
+    `;
+    grid.innerHTML += html;
+  });
+}
+
+function increaseHabit(habit) {
+  if (data.habits[habit].current < data.habits[habit].target) {
+    data.habits[habit].current++;
+    saveData();
+    renderHabits();
+    checkReminders();
+  }
+}
+
+function decreaseHabit(habit) {
+  if (data.habits[habit].current > 0) {
+    data.habits[habit].current--;
+    saveData();
+    renderHabits();
+    checkReminders();
+  }
+}
+
+function checkReminders() {
+  const reminders = [];
+  if (data.habits.agua.current < data.habits.agua.target) reminders.push('💧 Aún falta agua');
+  if (data.habits.medicamentos.current < data.habits.medicamentos.target) reminders.push('💊 Medicamentos pendientes');
+
+  const reminderDiv = document.getElementById('reminders');
+  const reminderList = document.getElementById('reminder-list');
+
+  if (reminders.length > 0) {
+    reminderList.innerHTML = reminders.map(r => `<div class="reminder-item">${r}</div>`).join('');
+    reminderDiv.style.display = 'block';
+  } else {
+    reminderDiv.style.display = 'none';
+  }
+}
+
+function saveNotes() {
+  data.notes = document.getElementById('notesArea').value;
+  saveData();
+  const btn = event.target;
+  const original = btn.textContent;
+  btn.textContent = '✓ Guardado';
+  setTimeout(() => { btn.textContent = original; }, 1500);
+}
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(tab.dataset.tab).classList.add('active');
+  });
+});
+
+loadData();
+renderTasks();
+renderHabits();
+document.getElementById('notesArea').value = data.notes;
+checkReminders();
+</script>
+
+</body>
+</html>
